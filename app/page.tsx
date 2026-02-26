@@ -48,6 +48,12 @@ export default function LandingPage() {
             Log In
           </Link>
         </div>
+        <p style={{ marginTop: "0.9rem", color: "var(--text-secondary)" }}>
+          New to DevSpace?{" "}
+          <Link href="/about" style={{ color: "var(--accent)", fontWeight: 600 }}>
+            Learn about us
+          </Link>
+        </p>
       </section>
 
       <section className="landing-profiles">
