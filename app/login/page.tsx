@@ -1,94 +1,128 @@
-export default function LoginPage({
-  searchParams
-}: {
-  searchParams: { error?: string; next?: string };
-}) {
-  const next = searchParams.next && searchParams.next.startsWith("/") ? searchParams.next : "/";
-  const hasError = searchParams.error === "invalid";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const DEMO_ACCOUNTS = [
+  { label: "Creator", email: "jack@devspace.demo", password: "demo123" },
+  { label: "Designer", email: "mira@devspace.demo", password: "demo123" },
+  { label: "Admin", email: "admin@devspace.demo", password: "admin123" },
+];
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const form = new FormData();
+    form.set("email", email);
+    form.set("password", password);
+    form.set("next", "/feed");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: form,
+        redirect: "follow",
+      });
+
+      if (res.redirected) {
+        const url = new URL(res.url);
+        if (url.searchParams.get("error") === "invalid") {
+          setError("Invalid email or password. Try a demo account below.");
+          setLoading(false);
+        } else {
+          router.push("/feed");
+        }
+        return;
+      }
+
+      router.push("/feed");
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  const fillDemo = (account: typeof DEMO_ACCOUNTS[number]) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    setError("");
+  };
 
   return (
-    <section className="panel auth-panel fade-in-up" style={{ maxWidth: "920px" }}>
-      <div className="login-split">
-        <div className="login-brand">
-          <div>
-            <p className="kicker">StackStore</p>
-            <h1>
-              Sign in to{" "}
-              <span className="gradient-text">StackStore</span>
-            </h1>
-          </div>
-          <div style={{ display: "grid", gap: "0.9rem" }}>
-            <div className="login-feature">
-              <div className="login-feature-icon">{"\u{1F6D2}"}</div>
-              <div className="login-feature-text">
-                <h4>Browse &amp; purchase</h4>
-                <p>Add dev gear to your cart and apply promo codes</p>
-              </div>
-            </div>
-            <div className="login-feature">
-              <div className="login-feature-icon">{"\u{1F527}"}</div>
-              <div className="login-feature-text">
-                <h4>Self-healing pipeline</h4>
-                <p>Watch Codex diagnose and fix bugs automatically</p>
-              </div>
-            </div>
-            <div className="login-feature">
-              <div className="login-feature-icon">{"\u{1F4CA}"}</div>
-              <div className="login-feature-text">
-                <h4>Ops Console</h4>
-                <p>Real-time metrics and remediation timeline</p>
-              </div>
-            </div>
-          </div>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <span className="brand-mark">DS</span>
+          <h1>Sign in to DevSpace</h1>
+          <p className="subtitle">Welcome back. Enter your credentials to continue.</p>
         </div>
 
-        <div>
-          {hasError && (
-            <div className="alert-banner error" style={{ marginBottom: "1rem" }}>
-              <span className="alert-banner-icon">{"\u26A0\uFE0F"}</span>
-              <div className="alert-banner-content">
-                <h4 style={{ color: "var(--danger)" }}>Invalid credentials</h4>
-                <p>Try one of the demo accounts below.</p>
-              </div>
-            </div>
-          )}
+        {error && (
+          <div className="alert-banner error">
+            <span>&#9888;&#65039;</span>
+            <span>{error}</span>
+          </div>
+        )}
 
-          <form className="auth-form" method="post" action="/api/auth/login">
-            <input type="hidden" name="next" value={next} />
-            <label>
-              Email
-              <input name="email" type="email" placeholder="admin@stackstore.demo" required />
-            </label>
-            <label>
-              Password
-              <input name="password" type="password" placeholder="admin123" required />
-            </label>
-            <button className="btn" type="submit" style={{ width: "100%" }}>
-              Sign in
-            </button>
-          </form>
+        <form onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
 
-          <p className="kicker" style={{ marginTop: "1.5rem", marginBottom: "0.5rem" }}>
-            Demo accounts
-          </p>
-          <div className="grid cols-2" style={{ gap: "0.5rem" }}>
-            <article className="card" style={{ padding: "0.8rem" }}>
-              <div className="pill" style={{ marginBottom: "0.4rem" }}>Admin</div>
-              <p style={{ fontSize: "0.8rem", color: "var(--ink)", margin: "0 0 0.1rem" }}>
-                admin@stackstore.demo
-              </p>
-              <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>admin123</p>
-            </article>
-            <article className="card" style={{ padding: "0.8rem" }}>
-              <div className="pill" style={{ marginBottom: "0.4rem" }}>Customer</div>
-              <p style={{ fontSize: "0.8rem", color: "var(--ink)", margin: "0 0 0.1rem" }}>
-                buyer@stackstore.demo
-              </p>
-              <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>buyer123</p>
-            </article>
+        <div className="auth-footer">
+          Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+        </div>
+
+        <div className="demo-accounts">
+          <p className="demo-accounts-title">Demo accounts</p>
+          <div className="demo-accounts-grid">
+            {DEMO_ACCOUNTS.map((a) => (
+              <button
+                key={a.email}
+                className="demo-account-btn"
+                type="button"
+                onClick={() => fillDemo(a)}
+              >
+                <span className="demo-account-label">{a.label}</span>
+                <span className="demo-account-email">{a.email}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

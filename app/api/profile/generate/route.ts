@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateProfile, type ProfileInput } from "../../../../src/backend/services/profileGenerator";
 
+const MAX_ITEMS = 24;
+
+function cleanText(value: unknown, max = 200): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function cleanPrice(value: unknown): string {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "0";
+  const rounded = Math.max(0, Math.round(parsed * 100) / 100);
+  return String(rounded);
+}
+
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
@@ -9,13 +22,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
-  const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "Anonymous";
-  const bio = typeof body.bio === "string" ? body.bio.trim() : "";
+  const prompt = cleanText(body.prompt, 1200);
+  const displayName = cleanText(body.displayName, 80) || "Anonymous";
+  const bio = cleanText(body.bio, 240);
   const items = Array.isArray(body.items)
-    ? (body.items as Array<{ name?: string; price?: string }>).map((i) => ({
-        name: String(i.name ?? ""),
-        price: String(i.price ?? "0")
+    ? (body.items as Array<{ name?: string; price?: string }>)
+        .slice(0, MAX_ITEMS)
+        .map((i) => ({
+        name: cleanText(i.name, 80),
+        price: cleanPrice(i.price),
       }))
     : [];
 

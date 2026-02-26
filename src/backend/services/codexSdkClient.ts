@@ -1,30 +1,48 @@
-import type { CodexIncidentInput, CodexResponse } from "../types/codex";
+import OpenAI from "openai";
 
-const DEFAULT_MODEL = process.env.CODEX_MODEL ?? "gpt-5-codex";
+type ReasoningEffort = "low" | "medium" | "high";
 
-export const fallbackCodexResponse: CodexResponse = {
-  provider: "fallback",
-  patchDiff:
-    "diff --git a/src/backend/services/checkout.ts b/src/backend/services/checkout.ts\n@@\n-  return subtotal - discount - discount;\n+  return subtotal - discount;\n",
-  testFile:
-    'it("applies promo discount once", () => {\\n  const total = calculateCartTotalFixed([{ sku: "agent-support-pro", qty: 1, unitPriceCents: 9900 }], { code: "AGENT10", percentOff: 10 });\\n  expect(total).toBe(8910);\\n});',
-  jiraPayload: {
-    title: "AgentMarket checkout total incorrect with AGENT10",
-    description: "Checkout failures crossed threshold due to promo double-discount bug.",
-    rootCause: "Promo discount is subtracted twice in calculateCartTotal.",
-    reproductionSteps: [
-      "Login as buyer@agentmarket.demo",
-      "Add an agent and apply AGENT10",
-      "Observe total is lower than expected because discount is applied twice"
-    ],
-    suggestedPatch: "Use subtotal - discount instead of subtracting discount twice.",
-    testSummary: "Add regression test asserting AGENT10 is applied exactly once."
-  },
-  prTitle: "fix(checkout): apply AGENT10 promo discount once",
-  prBody:
-    "This PR fixes the checkout calculation bug where promo discounts were deducted twice and adds a regression test.",
-  autoReviewSummary: "Auto-review passed: no breaking API changes, test coverage improved.",
-  mergeSummary: "Merged by automation after checks passed. Checkout totals now match expected promo math."
+const DEFAULT_CODEX_MODEL = "gpt-5.3-codex";
+const STRONG_FALLBACK_CODEX_MODEL = "gpt-5.1-codex";
+const FAST_FALLBACK_CODEX_MODEL = "gpt-5.1-codex-mini";
+
+function getCodexModel(): string {
+  const configured = (process.env.CODEX_MODEL ?? DEFAULT_CODEX_MODEL).trim();
+  return /codex/i.test(configured) ? configured : DEFAULT_CODEX_MODEL;
+}
+
+function readEnvInt(name: string, defaultValue: number, min: number, max: number): number {
+  const raw = Number(process.env[name] ?? defaultValue);
+  if (!Number.isFinite(raw)) return defaultValue;
+  return Math.min(max, Math.max(min, Math.round(raw)));
+}
+
+function readReasoningEffort(name: string, defaultValue: ReasoningEffort): ReasoningEffort {
+  const raw = String(process.env[name] ?? defaultValue).trim().toLowerCase();
+  if (raw === "low" || raw === "medium" || raw === "high") return raw;
+  return defaultValue;
+}
+
+type LatencyMetrics = {
+  profileLoadAvgMs: number;
+  profileLoadP95Ms: number;
+  lastChecked: string;
+};
+
+type LatencyAnalysis = {
+  provider: "openai-codex" | "fallback";
+  summary: string;
+  rootCause: string;
+  recommendation: string;
+};
+
+const fallbackAnalysis: Omit<LatencyAnalysis, "provider"> = {
+  summary:
+    "Detected artificial delay in app/api/internal/diagnostics/route.ts. The endpoint contains a hardcoded setTimeout when latencyBugFixed is false. Recommendation: remove the artificial delay branch.",
+  rootCause:
+    "The diagnostics API includes a conditional artificial delay that executes while latencyBugFixed is false.",
+  recommendation:
+    "Remove the artificial delay block and set latencyBugFixed to true after remediation validation.",
 };
 
 function extractOutputText(payload: unknown): string {
@@ -46,76 +64,146 @@ function extractOutputText(payload: unknown): string {
   return chunks.join("\n");
 }
 
-function tryParseCodexResponse(text: string): Omit<CodexResponse, "provider"> | null {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-
-  try {
-    const parsed = JSON.parse(text.slice(start, end + 1)) as Omit<CodexResponse, "provider">;
-    if (
-      typeof parsed.patchDiff === "string" &&
-      typeof parsed.testFile === "string" &&
-      typeof parsed.prTitle === "string" &&
-      typeof parsed.prBody === "string" &&
-      typeof parsed.autoReviewSummary === "string" &&
-      typeof parsed.mergeSummary === "string" &&
-      typeof parsed.jiraPayload?.title === "string"
-    ) {
-      return parsed;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-export async function analyzeCheckoutIncidentWithCodex(input: CodexIncidentInput): Promise<CodexResponse> {
+export async function analyzeLatencyIssue(metrics: LatencyMetrics): Promise<LatencyAnalysis> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return fallbackCodexResponse;
+  if (!apiKey) return { ...fallbackAnalysis, provider: "fallback" };
 
   const prompt = [
-    "You are Codex triaging a checkout production incident in AgentMarket.",
-    "Return strict JSON only with keys:",
-    "patchDiff, testFile, jiraPayload{title,description,rootCause,reproductionSteps,suggestedPatch,testSummary},",
-    "prTitle, prBody, autoReviewSummary, mergeSummary.",
-    "Incident logs:",
-    JSON.stringify(input.errorLogs, null, 2),
-    "Code context:",
-    JSON.stringify(
-      input.codeContext.map((entry) => ({ file: entry.file, content: entry.content.slice(0, 3000) })),
-      null,
-      2
-    )
+    "You are an SRE AI analyzing a latency spike in a profile loading service.",
+    "Return a JSON object with keys: summary, rootCause, recommendation.",
+    "Metrics:",
+    JSON.stringify(metrics, null, 2),
+    "Context: app/api/internal/diagnostics/route.ts may contain an artificial delay branch.",
   ].join("\n");
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        temperature: 0,
-        input: prompt
-      })
-    });
+    const timeoutMs = readEnvInt("CODEX_TIMEOUT_MS", 45_000, 10_000, 180_000);
+    const client = new OpenAI({ apiKey, timeout: timeoutMs, maxRetries: 0 });
+    const configuredModel = getCodexModel();
+    const models = Array.from(new Set([configuredModel, STRONG_FALLBACK_CODEX_MODEL, FAST_FALLBACK_CODEX_MODEL]));
+    const effort = readReasoningEffort("CODEX_REASONING_EFFORT", "medium");
+    let text = "";
 
-    if (!response.ok) return fallbackCodexResponse;
+    for (const model of models) {
+      try {
+        const payload = await client.responses.create({
+          model,
+          reasoning: { effort: model === configuredModel ? effort : "low" },
+          input: prompt,
+        });
+        text = extractOutputText(payload);
+        if (text.trim()) break;
+      } catch {
+        // Try next Codex variant before falling back.
+      }
+    }
+    if (!text.trim()) return { ...fallbackAnalysis, provider: "fallback" };
 
-    const payload = await response.json();
-    const text = extractOutputText(payload);
-    const parsed = tryParseCodexResponse(text);
-    if (!parsed) return fallbackCodexResponse;
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) {
+      return { ...fallbackAnalysis, provider: "fallback" };
+    }
 
+    const parsed = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
+    if (
+      typeof parsed.summary === "string" &&
+      typeof parsed.rootCause === "string" &&
+      typeof parsed.recommendation === "string"
+    ) {
+      return {
+        provider: "openai-codex",
+        summary: parsed.summary,
+        rootCause: parsed.rootCause,
+        recommendation: parsed.recommendation,
+      };
+    }
+
+    return { ...fallbackAnalysis, provider: "fallback" };
+  } catch {
+    return { ...fallbackAnalysis, provider: "fallback" };
+  }
+}
+
+export function generateRegressionTest(): string {
+  return `import { loadProfile } from "./profileLoader";
+
+it("loads profile within 200ms when latency bug is fixed", async () => {
+  const start = Date.now();
+  const profile = await loadProfile("jack");
+  const elapsed = Date.now() - start;
+  expect(profile).not.toBeNull();
+  expect(elapsed).toBeLessThan(200);
+});`;
+}
+
+export async function generateCodexReviewComment(input: {
+  issueSummary: string;
+  patchDiff: string;
+  jiraIssueKey?: string;
+}): Promise<{ provider: "openai-codex" | "fallback"; comment: string }> {
+  const fallback = {
+    provider: "fallback" as const,
+    comment: [
+      "Codex Auto-Review",
+      "- Scope is isolated to `/api/internal/diagnostics`.",
+      "- Change removes artificial delay and restores sub-200ms latency target.",
+      "- No user-facing API behavior changes expected.",
+      input.jiraIssueKey ? `- Linked Jira: ${input.jiraIssueKey}` : "- Jira link not provided.",
+      "- Recommendation: merge after CI passes.",
+    ].join("\n"),
+  };
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return fallback;
+
+  try {
+    const timeoutMs = readEnvInt("CODEX_TIMEOUT_MS", 45_000, 10_000, 180_000);
+    const client = new OpenAI({ apiKey, timeout: timeoutMs, maxRetries: 0 });
+    const configuredModel = getCodexModel();
+    const models = Array.from(new Set([configuredModel, STRONG_FALLBACK_CODEX_MODEL, FAST_FALLBACK_CODEX_MODEL]));
+    const effort = readReasoningEffort("CODEX_REASONING_EFFORT", "medium");
+    let text = "";
+
+    for (const model of models) {
+      try {
+        const response = await client.responses.create({
+          model,
+          reasoning: { effort: model === configuredModel ? effort : "low" },
+          max_output_tokens: 500,
+          input: [
+            {
+              role: "system",
+              content:
+                "You are Codex reviewer. Return a concise GitHub PR review comment as plain text with 4-6 bullet points.",
+            },
+            {
+              role: "user",
+              content: [
+                `Issue summary: ${input.issueSummary}`,
+                input.jiraIssueKey ? `Jira key: ${input.jiraIssueKey}` : "",
+                "Patch diff:",
+                input.patchDiff.slice(0, 3500),
+              ]
+                .filter(Boolean)
+                .join("\n"),
+            },
+          ],
+        });
+
+        text = extractOutputText(response).trim();
+        if (text) break;
+      } catch {
+        // Try next model variant.
+      }
+    }
+
+    if (!text) return fallback;
     return {
-      ...parsed,
-      provider: "openai-codex"
+      provider: "openai-codex",
+      comment: text.slice(0, 1800),
     };
   } catch {
-    return fallbackCodexResponse;
+    return fallback;
   }
 }

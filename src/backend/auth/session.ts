@@ -2,13 +2,14 @@ import { addHours } from "../utils/time";
 import { createSessionToken, readStore, updateStore } from "../db/store";
 import type { Role, User } from "../types/domain";
 
-export const SESSION_COOKIE_NAME = "agentmarket_session";
+export const SESSION_COOKIE_NAME = "devspace_session";
 
-function toUser(input: { id: string; email: string; name: string; role: Role; createdAt: string }): User {
+function toUser(input: { id: string; email: string; name: string; githubToken?: string; role: Role; createdAt: string }): User {
   return {
     id: input.id,
     email: input.email,
     name: input.name,
+    githubToken: input.githubToken,
     role: input.role,
     createdAt: new Date(input.createdAt)
   };
@@ -59,4 +60,28 @@ export async function getUserFromSessionToken(token: string | undefined | null):
 
   const user = store.users.find((candidate) => candidate.id === session.userId);
   return user ? toUser(user) : null;
+}
+
+export async function createUser(input: { email: string; password: string; name: string; username: string; githubToken?: string }): Promise<User> {
+  const id = "u-" + input.username;
+  const createdAt = new Date().toISOString();
+
+  await updateStore((store) => {
+    store.users.push({
+      id,
+      email: input.email,
+      password: input.password,
+      name: input.name,
+      githubToken: input.githubToken,
+      role: "CUSTOMER" as Role,
+      createdAt
+    });
+  });
+
+  return toUser({ id, email: input.email, name: input.name, githubToken: input.githubToken, role: "CUSTOMER" as Role, createdAt });
+}
+
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  const store = await readStore();
+  return store.users.some((user) => user.id === "u-" + username);
 }

@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "../../../../src/backend/auth/request";
-import { resetRemediationDemo } from "../../../../src/backend/services/incidentLoop";
+import { getUserFromRequest } from "@/src/backend/auth/request";
+import { updateStore } from "@/src/backend/db/store";
 
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
   if (!user || user.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/login?next=/admin", request.url));
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await resetRemediationDemo();
-  return NextResponse.redirect(new URL("/admin?loop=reset", request.url));
+  await updateStore((store) => {
+    store.latencyBugFixed = false;
+    store.latencyIncidentOpen = false;
+    store.latencyIncidentReportedAt = null;
+    store.apiMetrics = {
+      profileLoadAvgMs: 760,
+      profileLoadP95Ms: 980,
+      lastChecked: new Date().toISOString(),
+    };
+    store.loopRuns = [];
+    store.errorLogs = [];
+  });
+
+  return NextResponse.json({ success: true });
 }
