@@ -73,7 +73,6 @@ export type PersistedLoopRun = {
   jiraBoardUrl?: string;
   githubPrUrl?: string;
   githubReviewCommentUrl?: string;
-  cloudTaskId?: string;
   timeline: PersistedTimelineStep[];
   createdAt: string;
 };

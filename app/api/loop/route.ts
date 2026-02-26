@@ -18,7 +18,6 @@ export async function GET() {
       jiraBoardUrl: run.jiraBoardUrl,
       githubPrUrl: run.githubPrUrl,
       githubReviewCommentUrl: run.githubReviewCommentUrl,
-      cloudTaskId: run.cloudTaskId,
       timeline: run.timeline,
       createdAt: run.createdAt,
     })),

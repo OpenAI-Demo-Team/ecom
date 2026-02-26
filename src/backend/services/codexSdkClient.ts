@@ -125,18 +125,6 @@ export async function analyzeLatencyIssue(metrics: LatencyMetrics): Promise<Late
   }
 }
 
-export function generateRegressionTest(): string {
-  return `import { loadProfile } from "./profileLoader";
-
-it("loads profile within 200ms when latency bug is fixed", async () => {
-  const start = Date.now();
-  const profile = await loadProfile("jack");
-  const elapsed = Date.now() - start;
-  expect(profile).not.toBeNull();
-  expect(elapsed).toBeLessThan(200);
-});`;
-}
-
 export async function generateCodexReviewComment(input: {
   issueSummary: string;
   patchDiff: string;

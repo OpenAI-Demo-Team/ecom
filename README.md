@@ -68,7 +68,6 @@ src/backend/
   services/           # Business logic
     postService.ts    # Posts, likes, comments
     friendService.ts  # Friend connections
-    profileLoader.ts  # Profile read + metric tracking
     profileGenerator.ts # Codex profile generation
     githubIncidentService.ts # Jira/GitHub incident remediation integrations
     jiraService.ts    # Jira issue + workflow transitions
