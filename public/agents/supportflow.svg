@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f1f1a"/><stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.45" r="0.45">
+      <stop offset="0" stop-color="#10a37f" stop-opacity="0.15"/><stop offset="1" stop-color="#10a37f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#15c99a"/><stop offset="1" stop-color="#0d8a6a"/>
+    </linearGradient>
+    <filter id="s"><feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#10a37f" flood-opacity="0.2"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <ellipse cx="600" cy="360" rx="360" ry="300" fill="url(#glow)"/>
+  <g filter="url(#s)">
+    <rect x="480" y="200" width="240" height="260" rx="56" fill="url(#body)"/>
+    <rect x="508" y="235" width="184" height="120" rx="28" fill="#0a1a14"/>
+    <ellipse cx="562" cy="290" rx="20" ry="18" fill="#1de9b6"/>
+    <ellipse cx="638" cy="290" rx="20" ry="18" fill="#1de9b6"/>
+    <ellipse cx="562" cy="294" rx="12" ry="9" fill="#0a1a14"/>
+    <ellipse cx="638" cy="294" rx="12" ry="9" fill="#0a1a14"/>
+    <path d="M575 320 Q600 342 625 320" stroke="#1de9b6" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <line x1="600" y1="200" x2="600" y2="165" stroke="#15c99a" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="600" cy="158" r="10" fill="#1de9b6"/><circle cx="600" cy="158" r="5" fill="#fff" opacity="0.5"/>
+    <path d="M468 275 Q468 220 508 215" stroke="#8e8e8e" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M732 275 Q732 220 692 215" stroke="#8e8e8e" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="450" y="268" width="24" height="38" rx="8" fill="#6366f1"/>
+    <rect x="726" y="268" width="24" height="38" rx="8" fill="#6366f1"/>
+    <path d="M450 292 Q425 292 425 310 L425 325" stroke="#8e8e8e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <circle cx="425" cy="330" r="7" fill="#6366f1"/>
+    <circle cx="600" cy="420" r="12" fill="#0a1a14"/><circle cx="600" cy="420" r="6" fill="#1de9b6" opacity="0.7"/>
+    <rect x="520" y="460" width="55" height="22" rx="11" fill="#0d8a6a"/>
+    <rect x="625" y="460" width="55" height="22" rx="11" fill="#0d8a6a"/>
+  </g>
+  <g opacity="0.85">
+    <rect x="770" y="200" width="150" height="50" rx="25" fill="#1a1a1a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="798" cy="225" r="7" fill="#10a37f"/><rect x="815" y="218" width="75" height="5" rx="2.5" fill="rgba(255,255,255,0.1)"/><rect x="815" y="228" width="50" height="5" rx="2.5" fill="rgba(255,255,255,0.06)"/>
+    <rect x="790" y="264" width="130" height="44" rx="22" fill="#1a1a1a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="814" cy="286" r="6" fill="#6366f1" opacity="0.7"/><rect x="830" y="280" width="60" height="4" rx="2" fill="rgba(255,255,255,0.08)"/><rect x="830" y="289" width="40" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
+    <rect x="260" y="240" width="120" height="42" rx="21" fill="#1a1a1a" stroke="rgba(16,163,127,0.12)" stroke-width="1"/>
+    <rect x="280" y="256" width="75" height="4" rx="2" fill="rgba(16,163,127,0.15)"/><rect x="280" y="265" width="50" height="4" rx="2" fill="rgba(16,163,127,0.1)"/>
+  </g>
+  <circle cx="320" cy="180" r="3.5" fill="#1de9b6" opacity="0.45"/>
+  <circle cx="860" cy="160" r="3" fill="#6366f1" opacity="0.35"/>
+  <circle cx="280" cy="400" r="3" fill="#10a37f" opacity="0.3"/>
+  <text x="600" y="560" fill="#f7f7f8" font-family="system-ui,-apple-system,sans-serif" font-size="32" font-weight="700" text-anchor="middle" letter-spacing="-0.02em">SupportFlow</text>
+  <text x="600" y="590" fill="#8e8e8e" font-family="system-ui,-apple-system,sans-serif" font-size="14" font-weight="400" text-anchor="middle">24/7 AI support companion</text>
+</svg>

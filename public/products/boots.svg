@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="none">
+  <defs>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25110f"/>
+      <stop offset="1" stop-color="#8a211d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g4)"/>
+  <circle cx="1020" cy="120" r="180" fill="#ffb199" fill-opacity="0.2"/>
+  <path d="M220 530C260 420 390 350 560 350H730C760 350 780 370 780 398V430C780 450 792 468 810 476L920 525C950 538 970 567 970 600V610H230L220 530Z" fill="#120807" stroke="#f2a08c" stroke-opacity="0.55" stroke-width="4"/>
+  <text x="200" y="190" fill="#ffd5cd" font-family="Arial" font-size="56" font-weight="700">VectorStride Boots</text>
+</svg>
