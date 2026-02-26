@@ -1,7 +1,5 @@
 # DevSpace: Building With Codex
 
-[![CI](https://github.com/OpenAI-Demo-Team/ecom/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenAI-Demo-Team/ecom/actions/workflows/ci.yml)
-
 DevSpace is a social platform demo built for a Codex hackathon scenario. The app is designed to show:
 - how quickly Codex can power high-impact product features for developers
 - how Codex can be used programmatically inside internal workflows
