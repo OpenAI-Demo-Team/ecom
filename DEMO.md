@@ -11,12 +11,14 @@ npm install
 ```bash
 cp .env.example .env.local
 # edit .env.local and set your real key
-# OPENAI_API_KEY=sk-...
+# OPENAI_API_KEY=your-openai-api-key
 # CODEX_MODEL=gpt-5.3-codex
 # Optional for one-click GitHub PR from Codex editor:
-# DEVSPACE_DEFAULT_GITHUB_TOKEN=ghp_...
+# DEVSPACE_DEFAULT_GITHUB_TOKEN=your-github-token
 # GITHUB_REPO_OWNER=your-org
 # GITHUB_REPO_NAME=your-repo
+# For honest demo behavior, keep this false:
+# INCIDENT_AUTO_MERGE=false
 ```
 
 3. Start the app:
@@ -83,15 +85,16 @@ Keep only one `next dev` process for this repo.
 - Click the generated `PR` and `Codex Review` links.
 - Walk through each timeline step as it completes:
   1. "Codex detects the anomaly from the Jira-linked incident"
-  2. "Opens Jira and creates a cloud remediation task"
+  2. "Opens Jira and moves the issue workflow state to To Do"
   3. "Analyzes with the Responses API (Codex)"
   4. "Generates patch and opens PR"
-  5. "Posts Codex review comment and merges"
-- "The latency is now back to normal"
+  5. "Posts Codex review comment with @codex mention"
+  6. "After merge, the API goes healthy"
+- "If PR is not merged yet, dashboard stays degraded and shows pending merge"
 
 ### Wrap Up (30s)
 - Show the metrics are green now
-- "DevSpace shows two powerful Codex use cases: programmatic code generation for vibe-coded profiles, and autonomous self-healing for production issues"
+- "DevSpace shows two powerful Codex use cases: programmatic code generation for vibe-coded profiles, and autonomous incident triage + remediation PR generation"
 - "All data persists in JSON storage, all Codex calls use the Responses API with deterministic fallbacks"
 
 ## Demo Accounts

@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible bug
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: Clear and concise bug description
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste terminal logs or add screenshots
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      placeholder: e.g. 20.14.0
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: e.g. macOS 14, Chrome 122
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I searched existing issues and did not find a duplicate
+          required: true
+        - label: I removed/redacted secrets from logs and screenshots
+          required: true
