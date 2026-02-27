@@ -71,6 +71,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   useEffect(() => {
+    setLoaded(false);
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
@@ -78,7 +79,7 @@ export function Sidebar() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-  }, []);
+  }, [pathname]);
 
   if (!loaded || !user) return null;
 
